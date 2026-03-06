@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/Header';
+import { NavigationTracker } from '@/components/NavigationTracker';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 
@@ -21,6 +22,7 @@ export default function RootLayout({
   return (
     <html lang="nl" className={inter.variable}>
       <body>
+        <NavigationTracker />
         <Header />
         <main>{children}</main>
         <footer className="border-t border-gray-100 mt-20">
