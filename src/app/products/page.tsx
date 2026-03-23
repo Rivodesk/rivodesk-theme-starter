@@ -1,4 +1,9 @@
-import { HomePage } from '@/theme/templates/HomePage';
+import type { Metadata } from 'next';
+import { ProductsPage } from '@/theme/templates/ProductsPage';
+
+export const metadata: Metadata = {
+  title: 'Alle producten',
+};
 
 async function getProducts() {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000';
@@ -11,7 +16,7 @@ async function getProducts() {
   }
 }
 
-export default async function Page() {
+export default async function ProductsListPage() {
   const products = await getProducts();
-  return <HomePage products={products} shopName="Mijn Winkel" />;
+  return <ProductsPage products={products} />;
 }
