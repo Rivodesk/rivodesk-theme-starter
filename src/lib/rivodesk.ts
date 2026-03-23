@@ -5,8 +5,8 @@ let _supabase: SupabaseClient | null = null;
 export function getSupabase(): SupabaseClient {
   if (!_supabase) {
     _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.SUPABASE_URL!,
+      process.env.SUPABASE_ANON_KEY!
     );
   }
   return _supabase;
@@ -19,7 +19,7 @@ export const supabase = new Proxy({} as SupabaseClient, {
   },
 });
 
-export const SHOP_ID = process.env.NEXT_PUBLIC_SHOP_ID ?? '';
+export const SHOP_ID = process.env.SHOP_ID ?? '';
 
 export interface Product {
   id: string;
