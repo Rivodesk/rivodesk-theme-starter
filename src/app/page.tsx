@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { HomePage } from '@/theme/templates/HomePage';
 
 async function getProducts() {
