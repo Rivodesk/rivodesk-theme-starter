@@ -17,5 +17,6 @@ export async function GET(_req: Request, { params }: { params: { handle: string 
     .maybeSingle();
 
   if (error || !data) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-  return NextResponse.json(data);
+  const { product_images, product_variants, product_options, ...p } = data as any;
+  return NextResponse.json({ ...p, images: product_images ?? [], variants: product_variants ?? [], options: product_options ?? [] });
 }

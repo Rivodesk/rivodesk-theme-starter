@@ -299,12 +299,11 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
               >
                 Beschrijving
               </h3>
-              <p
-                className="text-sm leading-relaxed whitespace-pre-line"
+              <div
+                className="text-sm leading-relaxed prose prose-sm max-w-none"
                 style={{ color: 'var(--color-text-muted)' }}
-              >
-                {product.description}
-              </p>
+                dangerouslySetInnerHTML={{ __html: product.description }}
+              />
             </div>
           )}
         </div>

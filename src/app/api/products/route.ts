@@ -16,5 +16,8 @@ export async function GET() {
     .order('created_at', { ascending: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json(products ?? []);
+  const mapped = (products ?? []).map(({ product_images, product_variants, product_options, ...p }: any) => ({
+    ...p, images: product_images ?? [], variants: product_variants ?? [], options: product_options ?? [],
+  }));
+  return NextResponse.json(mapped);
 }
