@@ -3,9 +3,12 @@ import { NextResponse } from 'next/server';
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY!;
+const SHOP_ID = process.env.SHOP_ID!;
 
 export async function POST(req: Request) {
-  const body = await req.json();
+  const { customer, items, total, currency } = await req.json();
+
+  const amount_cents = Math.round(Number(total) * 100);
 
   const res = await fetch(`${SUPABASE_URL}/functions/v1/rivo-pay-checkout`, {
     method: 'POST',
@@ -14,9 +17,22 @@ export async function POST(req: Request) {
       'apikey': SUPABASE_ANON_KEY,
       'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
     },
-    body: JSON.stringify(body),
+    body: JSON.stringify({
+      shop_id: SHOP_ID,
+      amount_cents,
+      currency: (currency ?? 'EUR').toLowerCase(),
+      customer_email: customer?.email,
+      line_items: items?.map((i: any) => ({
+        title: i.title,
+        quantity: i.quantity,
+        price: i.price,
+      })),
+      order_meta: { customer },
+    }),
   });
 
   const data = await res.json();
-  return NextResponse.json(data, { status: res.status });
+  if (!res.ok) return NextResponse.json(data, { status: res.status });
+
+  return NextResponse.json({ clientSecret: data.client_secret, ...data });
 }
