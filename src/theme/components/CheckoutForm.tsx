@@ -225,23 +225,6 @@ export function CheckoutForm({ onDone }: CheckoutFormProps) {
                 className="block text-xs font-medium mb-1"
                 style={{ color: 'var(--color-text)' }}
               >
-                Volledige naam *
-              </label>
-              <input
-                type="text"
-                required
-                value={customer.name}
-                onChange={e => setCustomer(p => ({ ...p, name: e.target.value }))}
-                className={fieldClass}
-                style={fieldStyle}
-                placeholder="Jan de Vries"
-              />
-            </div>
-            <div>
-              <label
-                className="block text-xs font-medium mb-1"
-                style={{ color: 'var(--color-text)' }}
-              >
                 E-mailadres *
               </label>
               <input
