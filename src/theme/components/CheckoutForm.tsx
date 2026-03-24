@@ -24,10 +24,11 @@ interface CustomerInfo {
 
 interface StripePaymentProps {
   clientSecret: string;
+  customerName: string;
   onDone: () => void;
 }
 
-function StripePaymentForm({ clientSecret, onDone }: StripePaymentProps) {
+function StripePaymentForm({ clientSecret, customerName, onDone }: StripePaymentProps) {
   const stripe = useStripe();
   const elements = useElements();
   const [loading, setLoading] = useState(false);
@@ -44,6 +45,9 @@ function StripePaymentForm({ clientSecret, onDone }: StripePaymentProps) {
       elements,
       confirmParams: {
         return_url: `${window.location.origin}/orders?status=success`,
+        payment_method_data: {
+          billing_details: { name: customerName || 'Klant' },
+        },
       },
       redirect: 'if_required',
     });
@@ -381,7 +385,7 @@ export function CheckoutForm({ onDone }: CheckoutFormProps) {
             },
           }}
         >
-          <StripePaymentForm clientSecret={clientSecret} onDone={handlePaymentDone} />
+          <StripePaymentForm clientSecret={clientSecret} customerName={customer.name} onDone={handlePaymentDone} />
         </Elements>
       )}
     </div>
