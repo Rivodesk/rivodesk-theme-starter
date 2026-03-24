@@ -58,7 +58,7 @@ function StripePaymentForm({ clientSecret, onDone }: StripePaymentProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <PaymentElement />
+      <PaymentElement options={{ fields: { billingDetails: { name: 'never' } } }} />
       {error && (
         <p className="text-sm text-red-500 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
       )}
