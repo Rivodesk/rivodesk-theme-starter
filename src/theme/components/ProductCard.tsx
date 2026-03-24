@@ -12,7 +12,7 @@ interface ProductCardProps {
 export function ProductCard({ product }: ProductCardProps) {
   const primaryImage = product.images?.sort((a, b) => a.position - b.position)[0] ?? null;
   const primaryVariant = product.variants?.[0] ?? null;
-  const isAvailable = product.variants?.some(v => v.available) ?? false;
+  const isAvailable = product.variants?.some(v => (v.inventory_qty ?? 0) > 0) ?? false;
   const price = primaryVariant?.price ?? 0;
   const compareAtPrice = primaryVariant?.compare_at_price ?? null;
 

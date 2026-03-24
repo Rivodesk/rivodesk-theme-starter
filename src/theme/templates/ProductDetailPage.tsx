@@ -39,7 +39,7 @@ export function ProductDetailPage({ product }: ProductDetailPageProps) {
 
   const price = selectedVariant?.price ?? 0;
   const compareAtPrice = selectedVariant?.compare_at_price ?? null;
-  const isAvailable = selectedVariant?.available ?? false;
+  const isAvailable = (selectedVariant?.inventory_qty ?? 0) > 0;
   const primaryImage = sortedImages[activeImageIndex] ?? null;
 
   const handleAddToCart = () => {
