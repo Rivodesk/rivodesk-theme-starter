@@ -42,6 +42,9 @@ function StripePaymentForm({ clientSecret, onDone }: StripePaymentProps) {
 
     const { error: stripeError } = await stripe.confirmPayment({
       elements,
+      confirmParams: {
+        return_url: `${window.location.origin}/orders?status=success`,
+      },
       redirect: 'if_required',
     });
 
