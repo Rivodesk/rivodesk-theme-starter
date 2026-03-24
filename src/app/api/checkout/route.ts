@@ -27,7 +27,15 @@ export async function POST(req: Request) {
         quantity: i.quantity,
         price: i.price,
       })),
-      order_meta: { customer },
+      order_meta: {
+        customer,
+        line_items: items?.map((i: any) => ({
+          title: i.title,
+          variant_title: i.variant_title,
+          quantity: i.quantity,
+          price: i.price,
+        })),
+      },
     }),
   });
 
