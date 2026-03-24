@@ -12,7 +12,6 @@ import { CheckCircle, Loader2, ArrowRight } from 'lucide-react';
 import { useCart } from './CartContext';
 import { formatPrice } from '@/lib/rivodesk';
 
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? '');
 
 interface CustomerInfo {
   name: string;
@@ -92,6 +91,7 @@ export function CheckoutForm({ onDone }: CheckoutFormProps) {
   const { items, totalPrice, clearCart } = useCart();
   const [step, setStep] = useState<Step>('info');
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [publishableKey, setPublishableKey] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [customer, setCustomer] = useState<CustomerInfo>({
@@ -134,6 +134,7 @@ export function CheckoutForm({ onDone }: CheckoutFormProps) {
       }
 
       setClientSecret(data.clientSecret);
+      setPublishableKey(data.publishable_key ?? '');
       setStep('payment');
     } catch (err: any) {
       setError(err.message);
@@ -364,9 +365,9 @@ export function CheckoutForm({ onDone }: CheckoutFormProps) {
         </form>
       )}
 
-      {step === 'payment' && clientSecret && (
+      {step === 'payment' && clientSecret && publishableKey && (
         <Elements
-          stripe={stripePromise}
+          stripe={loadStripe(publishableKey)}
           options={{
             clientSecret,
             appearance: {
