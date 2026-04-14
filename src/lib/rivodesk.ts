@@ -1,24 +1,22 @@
 /**
  * Rivodesk Storefront SDK
- * Alle data gaat via de Supabase Edge Functions — geen directe DB toegang.
+ * Data ophalen via de Rivodesk API (api.rivodesk.com).
+ * Geen Supabase credentials nodig in het thema.
  */
 
-const SUPABASE_URL  = process.env.SUPABASE_URL!;
-const ANON_KEY      = process.env.SUPABASE_ANON_KEY!;
+const API_URL  = process.env.RIVODESK_API_URL ?? 'https://api.rivodesk.com';
 export const SHOP_ID = process.env.SHOP_ID ?? '';
 
-function fnUrl(name: string, params: Record<string, string> = {}): string {
-  const url = new URL(`${SUPABASE_URL}/functions/v1/${name}`);
-  for (const [k, v] of Object.entries(params)) if (v) url.searchParams.set(k, v);
-  return url.toString();
-}
-
-export async function rivoGet<T>(fn: string, params: Record<string, string> = {}): Promise<{ data: T | null; error: string | null }> {
+export async function rivoGet<T>(
+  path: string,
+  params: Record<string, string> = {},
+): Promise<{ data: T | null; error: string | null }> {
   try {
-    const res = await fetch(fnUrl(fn, params), {
-      headers: { apikey: ANON_KEY },
-      next: { revalidate: 0 },
-    });
+    const url = new URL(`${API_URL}/v1/${path}`);
+    url.searchParams.set('shop_id', SHOP_ID);
+    for (const [k, v] of Object.entries(params)) if (v) url.searchParams.set(k, v);
+
+    const res  = await fetch(url.toString(), { next: { revalidate: 0 } });
     const body = await res.json();
     if (!res.ok) return { data: null, error: body.error ?? `HTTP ${res.status}` };
     return { data: body as T, error: null };
@@ -27,12 +25,15 @@ export async function rivoGet<T>(fn: string, params: Record<string, string> = {}
   }
 }
 
-export async function rivoPost<T>(fn: string, body: unknown): Promise<{ data: T | null; error: string | null }> {
+export async function rivoPost<T>(
+  path: string,
+  body: unknown,
+): Promise<{ data: T | null; error: string | null }> {
   try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, {
+    const res  = await fetch(`${API_URL}/v1/${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', apikey: ANON_KEY },
-      body: JSON.stringify(body),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ shop_id: SHOP_ID, ...(body as object) }),
     });
     const json = await res.json();
     if (!res.ok) return { data: null, error: json.error ?? `HTTP ${res.status}` };
@@ -140,7 +141,6 @@ export interface ShippingAddress {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-/** Zet raw storefront-products response om naar Product[] */
 export function mapProducts(raw: Record<string, unknown>[]): Product[] {
   return raw.map((p) => ({
     ...p,
