@@ -1,25 +1,48 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+/**
+ * Rivodesk Storefront SDK
+ * Alle data gaat via de Supabase Edge Functions — geen directe DB toegang.
+ */
 
-let _supabase: SupabaseClient | null = null;
+const SUPABASE_URL  = process.env.SUPABASE_URL!;
+const ANON_KEY      = process.env.SUPABASE_ANON_KEY!;
+export const SHOP_ID = process.env.SHOP_ID ?? '';
 
-export function getSupabase(): SupabaseClient {
-  if (!_supabase) {
-    _supabase = createClient(
-      process.env.SUPABASE_URL!,
-      process.env.SUPABASE_ANON_KEY!
-    );
-  }
-  return _supabase;
+function fnUrl(name: string, params: Record<string, string> = {}): string {
+  const url = new URL(`${SUPABASE_URL}/functions/v1/${name}`);
+  for (const [k, v] of Object.entries(params)) if (v) url.searchParams.set(k, v);
+  return url.toString();
 }
 
-// Backwards-compat alias — only use inside request handlers
-export const supabase = new Proxy({} as SupabaseClient, {
-  get(_t, prop) {
-    return (getSupabase() as any)[prop];
-  },
-});
+export async function rivoGet<T>(fn: string, params: Record<string, string> = {}): Promise<{ data: T | null; error: string | null }> {
+  try {
+    const res = await fetch(fnUrl(fn, params), {
+      headers: { apikey: ANON_KEY },
+      next: { revalidate: 0 },
+    });
+    const body = await res.json();
+    if (!res.ok) return { data: null, error: body.error ?? `HTTP ${res.status}` };
+    return { data: body as T, error: null };
+  } catch (e) {
+    return { data: null, error: (e as Error).message };
+  }
+}
 
-export const SHOP_ID = process.env.SHOP_ID ?? '';
+export async function rivoPost<T>(fn: string, body: unknown): Promise<{ data: T | null; error: string | null }> {
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', apikey: ANON_KEY },
+      body: JSON.stringify(body),
+    });
+    const json = await res.json();
+    if (!res.ok) return { data: null, error: json.error ?? `HTTP ${res.status}` };
+    return { data: json as T, error: null };
+  } catch (e) {
+    return { data: null, error: (e as Error).message };
+  }
+}
+
+// ── Types ────────────────────────────────────────────────────────────────────
 
 export interface Product {
   id: string;
@@ -30,6 +53,9 @@ export interface Product {
   product_type: string;
   tags: string[];
   status: string;
+  seo_title: string | null;
+  seo_description: string | null;
+  compare_at_price: number | null;
   images: ProductImage[];
   variants: ProductVariant[];
   options: ProductOption[];
@@ -60,12 +86,22 @@ export interface ProductOption {
   position: number;
 }
 
+export interface Collection {
+  id: string;
+  title: string;
+  handle: string;
+  description: string | null;
+  image_url: string | null;
+  image_alt: string | null;
+}
+
 export interface ShopConfig {
   id: string;
   name: string;
+  store_domain: string;
   brand_color: string;
   widget_title: string | null;
-  description: string | null;
+  website_url: string | null;
 }
 
 export interface Order {
@@ -76,14 +112,44 @@ export interface Order {
   fulfillment_status: string | null;
   total_price: number;
   currency: string;
-  line_items: any[];
-  shipping_address: any | null;
+  line_items: OrderLineItem[];
+  shipping_address: ShippingAddress | null;
+  tracking_number: string | null;
+  tracking_url: string | null;
   created_at: string;
 }
 
+export interface OrderLineItem {
+  title: string;
+  quantity: number;
+  price: number;
+  variant_title?: string;
+  sku?: string;
+}
+
+export interface ShippingAddress {
+  first_name: string;
+  last_name: string;
+  address1: string;
+  address2?: string;
+  city: string;
+  zip: string;
+  country: string;
+  phone?: string;
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+/** Zet raw storefront-products response om naar Product[] */
+export function mapProducts(raw: Record<string, unknown>[]): Product[] {
+  return raw.map((p) => ({
+    ...p,
+    images:   (p.product_images   as ProductImage[]  ) ?? [],
+    variants: (p.product_variants as ProductVariant[]) ?? [],
+    options:  (p.product_options  as ProductOption[] ) ?? [],
+  } as Product));
+}
+
 export function formatPrice(amount: number, currency = 'EUR'): string {
-  return new Intl.NumberFormat('nl-NL', {
-    style: 'currency',
-    currency,
-  }).format(amount);
+  return new Intl.NumberFormat('nl-NL', { style: 'currency', currency }).format(amount);
 }
