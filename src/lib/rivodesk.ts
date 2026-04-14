@@ -4,7 +4,7 @@
  * Geen Supabase credentials nodig in het thema.
  */
 
-const API_URL  = process.env.RIVODESK_API_URL ?? 'https://api.rivodesk.com';
+const API_URL  = process.env.RIVODESK_API_URL ?? 'https://rivodesk-rivo-dashboard.vercel.app';
 export const SHOP_ID = process.env.SHOP_ID ?? '';
 
 export async function rivoGet<T>(
